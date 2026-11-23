@@ -1,0 +1,13 @@
+RESULTADO DE CARGA NORMAL: TRANSCRIPCION
+
+Origen: salida de PruebaCarga compartida por el estudiante en esta conversacion.
+No es una captura de pantalla ni una bitacora Lamport generada por el programa.
+No se cuenta con una salida aportada de la prueba en modo inseguro.
+
+Inicio: 10 solicitudes por puerta
+Permitidas: 10
+Rechazadas: 20
+Errores: 0
+ESTADO: consulta P1 | dentro=10 | aforo=10
+
+Process finished with exit code 0
