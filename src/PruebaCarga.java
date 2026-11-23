@@ -1,5 +1,4 @@
 import java.io.*;
-import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -14,66 +13,55 @@ public class PruebaCarga {
             config.load(archivo);
         }
 
-        String host = config.getProperty("host");
-        int puerto = Integer.parseInt(
-                config.getProperty("puerto"));
         String token = config.getProperty("token");
+
+        String inicial = Puerta.solicitar(
+                config, 1, "ESTADO", token);
+
+        if (!inicial.startsWith("ESTADO:") ||
+                !inicial.contains(" | dentro=0 |")) {
+
+            System.out.println(
+                    "Reinicia Coordinador para empezar en cero");
+
+            System.out.println(inicial);
+            return;
+        }
 
         var ejecutor = Executors.newFixedThreadPool(30);
 
         var preparados = new CountDownLatch(30);
         var inicio = new CountDownLatch(1);
 
-        List<Future<String>> resultados = new ArrayList<>();
+        List<Future<String>> tareas = new ArrayList<>();
 
         try {
+
             for (int i = 0; i < 30; i++) {
 
-                final int solicitud = i + 1;
+                final int puerta = i / 10 + 1;
 
-                resultados.add(ejecutor.submit(() -> {
+                tareas.add(ejecutor.submit(() -> {
 
                     preparados.countDown();
                     inicio.await();
 
-                    try (Socket conexion =
-                                 new Socket(host, puerto)) {
-
-                        conexion.setSoTimeout(5000);
-
-                        var entrada = new BufferedReader(
-                                new InputStreamReader(
-                                        conexion.getInputStream()));
-
-                        var salida = new PrintWriter(
-                                conexion.getOutputStream(), true);
-
-                        salida.println("ENTRAR," + token);
-
-                        String respuesta = entrada.readLine();
-
-                        if (respuesta == null) {
-                            return "ERROR: respuesta vacia";
-                        }
-
-                        System.out.println(
-                                solicitud + ": " + respuesta);
-
-                        return respuesta;
-
-                    } catch (IOException e) {
-                        return "ERROR: " + e.getMessage();
-                    }
+                    return Puerta.solicitar(
+                            config,
+                            puerta,
+                            "ENTRAR",
+                            token);
                 }));
             }
 
             if (!preparados.await(5, TimeUnit.SECONDS)) {
+
                 throw new IllegalStateException(
-                        "No se prepararon los 30 hilos");
+                        "No se prepararon los hilos");
             }
 
             System.out.println(
-                    "Lanzando 30 solicitudes simultaneas...");
+                    "Inicio: 10 solicitudes por puerta");
 
             inicio.countDown();
 
@@ -81,43 +69,44 @@ public class PruebaCarga {
             int rechazadas = 0;
             int errores = 0;
 
-            for (Future<String> resultado : resultados) {
+            for (int i = 0; i < tareas.size(); i++) {
 
-                String respuesta = resultado.get();
+                String respuesta = tareas.get(i).get();
 
-                if (respuesta.startsWith("OK:")) {
+                System.out.println(
+                        "P" + (i / 10 + 1)
+                                + ": " + respuesta);
+
+                if (respuesta.startsWith("PERMITIDA:")) {
+
                     permitidas++;
-                } else if (respuesta.startsWith("ERROR:")) {
-                    errores++;
-                    System.out.println(respuesta);
-                } else {
+
+                } else if (
+                        respuesta.startsWith("RECHAZADA:")) {
+
                     rechazadas++;
+
+                } else {
+
+                    errores++;
                 }
             }
 
-            System.out.println("\nRESUMEN");
-            System.out.println("Permitidas: " + permitidas);
-            System.out.println("Rechazadas: " + rechazadas);
-            System.out.println("Errores: " + errores);
+            System.out.println(
+                    "Permitidas: " + permitidas);
 
-            try (Socket conexion = new Socket(host, puerto)) {
+            System.out.println(
+                    "Rechazadas: " + rechazadas);
 
-                conexion.setSoTimeout(5000);
+            System.out.println(
+                    "Errores: " + errores);
 
-                var entrada = new BufferedReader(
-                        new InputStreamReader(
-                                conexion.getInputStream()));
-
-                var salida = new PrintWriter(
-                        conexion.getOutputStream(), true);
-
-                salida.println("ESTADO," + token);
-
-                System.out.println(
-                        "Estado final: " + entrada.readLine());
-            }
+            System.out.println(
+                    Puerta.solicitar(
+                            config, 1, "ESTADO", token));
 
         } finally {
+
             inicio.countDown();
             ejecutor.shutdownNow();
         }
