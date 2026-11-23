@@ -22,7 +22,7 @@ docs/evidencias/carga_normal_transcrita.txt
 README.md
 ```
 
-Las fotografías de `docs/img/` provienen del estudiante. `conexion_coordinador.jpg` y `respuesta_puerta.jpg` corresponden al intercambio inicial de texto, no al escenario completo de aforo. Se conservan los originales; el informe solo recorta su visualización para facilitar la lectura. `codigos_sesion.png` contiene los códigos aportados posteriormente. No se han creado capturas de escenarios pendientes.
+Las fotografías de `docs/img/` provienen del estudiante. `conexion_coordinador.jpg` y `respuesta_puerta.jpg` corresponden al intercambio inicial de texto, no al escenario completo de aforo. Se conservan los originales; el informe ajusta el encuadre y gira su visualización para ampliar el texto y facilitar la lectura, sin reconstruir mensajes ni resultados. `codigos_sesion.png` contiene los códigos aportados posteriormente. No se han creado capturas de escenarios pendientes.
 
 ## Compilación del código
 
